@@ -1,10 +1,12 @@
 import * as THREE from "three";
 
+export const ORIGIN = new THREE.Vector3(0, 0, 0);
+
 export const WORLD_AXIS = {
 
-    x: new THREE.Vector3(1, 0, 0),
-    y: new THREE.Vector3(0, 1, 0),
-    z: new THREE.Vector3(0, 0, 1),
+    X: new THREE.Vector3(1, 0, 0),
+    Y: new THREE.Vector3(0, 1, 0),
+    Z: new THREE.Vector3(0, 0, 1),
 
     minus_x: new THREE.Vector3(-1, 0, 0),
     minus_y: new THREE.Vector3(0, -1, 0),

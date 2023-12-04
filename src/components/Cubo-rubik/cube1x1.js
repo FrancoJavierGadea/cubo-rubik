@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-
+import {ORIGIN, WORLD_AXIS} from "@utils/world.js";
 
 export class Face extends THREE.Mesh {
 
@@ -65,7 +65,54 @@ function getFaces(config = {}){
     return faces;
 }
 
+class RotateAround {
+
+    #angle = 0
+
+    set angle(value){
+
+        console.log('RotateAround', value);
+        this.rotate(value - this.#angle);
+
+        this.#angle = value;
+    }
+
+    get angle(){
+
+        return this.#angle;
+    }
+
+    constructor(config = {}){
+
+        const {target, angle, axis, point} = config;
+
+        this.angle = angle || 0;
+        this.axis = axis || WORLD_AXIS.Y;
+        this.point = point || ORIGIN;
+
+        this.target = target;
+    }
+
+    rotate(angle = this.angle, axis = this.axis, point = this.point){
+
+        if(angle === 0) return;
+
+        this.target.position.applyAxisAngle(axis, angle);
+        this.target.rotateOnWorldAxis(axis, angle);
+    }
+}
+
 export class Cube1x1 extends THREE.Group {
+
+    set _rotate_around_angle(value){
+
+        this.rotateAround.angle = value;
+    }
+
+    get _rotate_around_angle(){
+
+        return this.rotateAround.angle;
+    }
 
     constructor(config = {}){
 
@@ -100,6 +147,9 @@ export class Cube1x1 extends THREE.Group {
             ...data,
             colors: faces.map(face => face.material.color.getHexString())
         };
-    }
 
+        this.rotateAround = new RotateAround({
+            target: this
+        });
+    }
 }

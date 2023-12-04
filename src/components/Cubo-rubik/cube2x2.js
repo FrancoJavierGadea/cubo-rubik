@@ -1,11 +1,7 @@
 import * as THREE from "three";
+import {ORIGIN, WORLD_AXIS} from "@utils/world.js";
 import { Cube1x1 } from "./cube1x1.js";
 
-const WorldAxis = {
-    x: new THREE.Vector3(1, 0, 0),
-    y: new THREE.Vector3(0, 1, 0),
-    z: new THREE.Vector3(0, 0, 1)
-};
 
 function getCubes1x1(size, gap){
 
@@ -34,6 +30,7 @@ export class Cube2x2 extends THREE.Group {
 
     #cubes = [];
     #faces = {};
+    #axis = {};
 
     constructor(config = {}){
 
@@ -57,38 +54,80 @@ export class Cube2x2 extends THREE.Group {
             top: (cube) => (cube.position.y > 0),
             bottom: (cube) => (cube.position.y < 0),
         };
+
+        this.#axis = {
+            'top': WORLD_AXIS.Y,
+            'bottom': WORLD_AXIS.Y,
+            'left': WORLD_AXIS.X,
+            'right': WORLD_AXIS.X,
+            'front': WORLD_AXIS.Z,
+            'back': WORLD_AXIS.Z
+        }
         
         this.position.x = 0 || position.x || 0;
         this.position.y = 0 || position.y || 0;
         this.position.z = 0 || position.z || 0;
         
-        this.rotateFace('front', 90);
-        this.rotateFace('top', 90);
-        this.rotateFace('left', 90);
+        this.animationMixer = new THREE.AnimationMixer(this);
+
+        this.tick = (delta) => {
+
+            this.animationMixer.update(delta);
+        }
+
+        // this.rotateFace('front', 90);
+        // this.rotateFace('top', 90);
+        this.rotateFace('top', 90).action.play();
     }
+
+
 
     rotateFace(face, angle){
 
+        
+        if(!this.#faces[face]) return;
+        
         const angle_rad = angle * Math.PI / 180;
 
-        const axis = {
-            'top': WorldAxis.y,
-            'bottom': WorldAxis.y,
-            'left': WorldAxis.x,
-            'right': WorldAxis.x,
-            'front': WorldAxis.z,
-            'back': WorldAxis.z
+        const targets = this.#cubes.filter(this.#faces[face]);
+
+    
+        //Animacion 
+        const keyframes = {
+            '0': 0,
+            '1': angle_rad,
         }
 
-        if(this.#faces[face]){
+        const times = Object.keys(keyframes).map(key => +key);
+        const values = Object.values(keyframes);
 
-            this.#cubes.filter(this.#faces[face]).forEach(cube => {
-                
-                cube.position.applyAxisAngle(axis[face], angle_rad);
+        //const track = new THREE.NumberKeyframeTrack('._rotate_around_angle', times, values);
+        const track = new THREE.NumberKeyframeTrack('.angle', times, values);
+        const clip = new THREE.AnimationClip('rotate', -1, [track]);
 
-                cube.rotateOnWorldAxis(axis[face], angle_rad);
-            });
+        const group = new THREE.AnimationObjectGroup(...targets.map(cube => {
+
+            cube.rotateAround.axis = this.#axis[face];
+
+            return cube.rotateAround;
+        }));
+
+        const action = this.animationMixer.clipAction(clip, group);
+
+        action.setLoop(THREE.LoopOnce);
+        //action.clampWhenFinished = true;
+
+
+        return {
+            action,
+            rotate: () => {
+                targets.forEach(cube => {
+
+                    cube.rotateAround.rotate(angle_rad, this.#axis[face]);
+                });
+            }
         }
-
     }
+
+
 }

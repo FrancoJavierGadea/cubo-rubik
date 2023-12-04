@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { testRotations } from "./rotations.js";
-import { drawWorldAxis } from '@utils/axis.js';
+import { drawWorldAxis } from '@utils/world.js';
 import { getStats } from '@utils/stats.js';
 
 

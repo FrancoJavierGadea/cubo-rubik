@@ -1,7 +1,24 @@
 import * as THREE from "three";
 import { Point, drawPoint } from "./helpers";
+import {WORLD_AXIS} from "./world.js";
 
 export class TestCube extends THREE.Group {
+
+    _angle = 0
+
+    get angle(){
+
+        return this._angle;
+    }
+
+    set angle(value){
+
+        //console.log(value);
+        this.rotateOnWorldAxis(WORLD_AXIS.y, (value - this._angle) * Math.PI / 180);
+        this.position.applyAxisAngle(WORLD_AXIS.y, (value - this._angle) * Math.PI / 180);
+
+        this._angle = value;
+    }
 
     constructor(size = 1){
         super();

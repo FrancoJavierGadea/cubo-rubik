@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { Cube1x1 } from "./cube1x1.js";
-import { WORLD_AXIS } from "@utils/axis.js";
+import { WORLD_AXIS } from "@utils/world.js";
 
 const axis = {
     'top': WORLD_AXIS.y,

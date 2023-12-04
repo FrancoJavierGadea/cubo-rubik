@@ -13,24 +13,15 @@ function moveAnimation(){
     //Convert keyframes to arrays
     const position_times = Object.keys(position_keyframes).map(key => +key);
     const position_values = Object.values(position_keyframes).map(vector => vector.toArray()).flat(1);
-    const position_values_reverse = Object.values(position_keyframes).map(vector => vector.toArray()).reverse().flat(1);
     
     //!-> Create keyframes tracks
     const position_track = new THREE.VectorKeyframeTrack(".position", position_times, position_values);
 
-    const position_track_reverse = new THREE.VectorKeyframeTrack(".position", position_times, position_values_reverse);
-
     //!-> Create Animation clip
     const position_clip = new THREE.AnimationClip("move", -1, [position_track]);
-    const position_clip_reverse = new THREE.AnimationClip("move", -1, [position_track_reverse]);
 
-    return {
-        normal: position_clip,
-        reverse: position_clip_reverse
-    };
+    return position_clip;
 }
-
-moveAnimation();
 
 function scaleAnimation(){
 
@@ -46,9 +37,43 @@ function scaleAnimation(){
 
     const scale_clip = new THREE.AnimationClip("scale", -1, [scaleKF]);
 
-    return {
-        normal: scale_clip
+    return scale_clip;
+}
+
+function rotateAnimation(){
+
+    const rotate_keyframes = {
+        '0': new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0),
+        '3': new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI),
     }
+
+    const rotate_times = Object.keys(rotate_keyframes).map(key => +key);
+
+    const rotate_values = Object.values(rotate_keyframes).map(q => q.toArray()).flat(1);
+
+    const rotate_tracks = new THREE.QuaternionKeyframeTrack('.quaternion', rotate_times, rotate_values);
+
+    const rotate_clip = new THREE.AnimationClip("rotate", -1, [rotate_tracks]);
+
+    return rotate_clip;
+}
+
+function angleAnimation(){
+
+    const angle_keyframes = {
+        '0': 0,
+        '3': 360
+    }
+
+    const angle_times = Object.keys(angle_keyframes).map(key => +key);
+
+    const angle_values = Object.values(angle_keyframes);
+
+    const angle_track = new THREE.NumberKeyframeTrack('.angle', angle_times, angle_values);
+
+    const angle_clip = new THREE.AnimationClip('angle', -1, [angle_track]);
+
+    return angle_clip;
 }
 
 export function testChainAnimation(world){
@@ -56,19 +81,19 @@ export function testChainAnimation(world){
     
     //Create a mesh
     const testCube = new TestCube(2);
-
+    testCube.position.set(2, 0, 2);
     world.scene.add(testCube);
 
     //!-> Create a mixer and actions
     const mixer = new THREE.AnimationMixer(testCube);
 
-    const move_action = mixer.clipAction(moveAnimation().normal);
-    const move_action_reverse = mixer.clipAction(moveAnimation().reverse);
-    const scale_action = mixer.clipAction(scaleAnimation().normal);
+    const move_action = mixer.clipAction(moveAnimation());
+    const scale_action = mixer.clipAction(scaleAnimation());
+    const rotate_action = mixer.clipAction(rotateAnimation());
+    const angle_action = mixer.clipAction(angleAnimation());
 
     //!-> Config action
     move_action.setLoop(THREE.LoopOnce);
-    move_action_reverse.setLoop(THREE.LoopOnce);
     scale_action.setLoop(THREE.LoopPingPong, 2);
 
     move_action.clampWhenFinished = true;
@@ -85,25 +110,25 @@ export function testChainAnimation(world){
 
     //!-> Chain and play
 
-    const actions = [move_action, scale_action, move_action_reverse];
+    // const actions = [move_action, scale_action];
 
-    mixer.addEventListener('finished', ({type, action, direction, target}) => {
+    // mixer.addEventListener('finished', ({type, action, direction, target}) => {
 
-        console.log(action.getClip().name);
+    //     console.log(action.getClip().name);
 
-        const nextAction = actions.findIndex((ac) => action === ac) + 1;
+    //     const nextAction = actions.findIndex((ac) => action === ac) + 1;
 
-        if(actions[nextAction]){
+    //     if(actions[nextAction]){
 
-            actions[nextAction].play();
-        }
-        else {
-            console.log('end')
-        }
+    //         actions[nextAction].play();
+    //     }
+    //     else {
+    //         console.log('end')
+    //     }
 
-    });
+    // });
 
-    actions[0].play();
+    // actions[0].play();
 
     // move_action.startAt(0);
     // scale_action.startAt(2);
@@ -112,4 +137,7 @@ export function testChainAnimation(world){
     // move_action.play();
     // scale_action.play();
     // //move_action_reverse.play();
+
+    //rotate_action.play();
+    angle_action.play();
 }
