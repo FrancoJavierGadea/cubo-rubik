@@ -1,11 +1,18 @@
 import * as THREE from "three";
 import { Cube1x1 } from "./cube1x1.js";
+import { WORLD_AXIS } from "@utils/axis.js";
 
-const WorldAxis = {
-    x: new THREE.Vector3(1, 0, 0),
-    y: new THREE.Vector3(0, 1, 0),
-    z: new THREE.Vector3(0, 0, 1)
-};
+const axis = {
+    'top': WORLD_AXIS.y,
+    'bottom': WORLD_AXIS.y,
+    'left': WORLD_AXIS.x,
+    'right': WORLD_AXIS.x,
+    'front': WORLD_AXIS.z,
+    'back': WORLD_AXIS.z,
+    'middleX': WORLD_AXIS.x,
+    'middleY': WORLD_AXIS.y,
+    'middleZ': WORLD_AXIS.z
+}
 
 function getCubes1x1(size, gap){
 
@@ -23,12 +30,12 @@ function getCubes1x1(size, gap){
         new Cube1x1({ size, position: { x: -n, y: -n, z: -n } }),
 
         //Centers
-        new Cube1x1({ size, position: { x: n, y: 0, z: 0 } }),
-        new Cube1x1({ size, position: { x: -n, y: 0, z: 0 } }),
-        new Cube1x1({ size, position: { x: 0, y: n, z: 0 } }),
-        new Cube1x1({ size, position: { x: 0, y: -n, z: 0 } }),
-        new Cube1x1({ size, position: { x: 0, y: 0, z: -n } }),
-        new Cube1x1({ size, position: { x: 0, y: 0, z: n } }),
+        new Cube1x1({ size, position: { x: n, y: 0, z: 0 }, data: {center: true} }),
+        new Cube1x1({ size, position: { x: -n, y: 0, z: 0 }, data: {center: true} }),
+        new Cube1x1({ size, position: { x: 0, y: n, z: 0 }, data: {center: true} }),
+        new Cube1x1({ size, position: { x: 0, y: -n, z: 0 }, data: {center: true} }),
+        new Cube1x1({ size, position: { x: 0, y: 0, z: -n }, data: {center: true} }),
+        new Cube1x1({ size, position: { x: 0, y: 0, z: n }, data: {center: true} }),
 
         //Edge
         new Cube1x1({ size, position: { x: n, y: n, z: 0 } }),
@@ -60,21 +67,24 @@ export class Cube3x3 extends THREE.Group {
         const {size = 2, gap = 0.05, position = {}} = config;
 
         this.#cubes = getCubes1x1(size, gap);
-
-        this.#faces.middleX = this.#cubes.filter((cube) => cube.position.x === 0);
-        this.#faces.middleY = this.#cubes.filter((cube) => cube.position.y === 0);
-        this.#faces.middleZ = this.#cubes.filter((cube) => cube.position.z === 0);
-
+        
         const n = (size + gap) / 2;
 
-        this.#faces.left = this.#cubes.filter((cube) => cube.position.x < -n);
-        this.#faces.right = this.#cubes.filter((cube) => cube.position.x > n);
+        this.#faces = {
 
-        this.#faces.top = this.#cubes.filter((cube) => cube.position.y > n);
-        this.#faces.bottom = this.#cubes.filter((cube) => cube.position.y < -n);
-
-        this.#faces.front = this.#cubes.filter((cube) => cube.position.z > n);
-        this.#faces.back = this.#cubes.filter((cube) => cube.position.z < -n);
+            middleX: (cube) => (cube.position.x > -n && cube.position.x < n),
+            middleY: (cube) => (cube.position.y > -n && cube.position.y < n),
+            middleZ: (cube) => (cube.position.z > -n && cube.position.z < n),
+    
+            left: (cube) => (cube.position.x <= -n),
+            right: (cube) => (cube.position.x >= n),
+    
+            top: (cube) => (cube.position.y >= n),
+            bottom: (cube) => (cube.position.y <= -n),
+    
+            front: (cube) => (cube.position.z >= n),
+            back: (cube) => (cube.position.z <= -n),
+        };
         
         this.add(...this.#cubes);
 
@@ -83,37 +93,28 @@ export class Cube3x3 extends THREE.Group {
         this.position.z = position.z || 0; 
 
 
-/* 
-        // this.rotateFace('top', 60);
-        // this.rotateFace('bottom', 60);
-
-        this.rotateFace('middleZ', 60); */
+        
+        // this.rotateFace('middleX', 90);
+        // this.rotateFace('top', 90);
+        // this.rotateFace('middleY', 90);
+        // this.rotateFace('middleZ', 90);
     }
 
     rotateFace(face, angle){
 
-        const angle_rad = angle * Math.PI / 180;
+        const angle_rad = THREE.MathUtils.degToRad(angle);
 
-        const axis = {
-            'top': WorldAxis.y,
-            'bottom': WorldAxis.y,
-            'left': WorldAxis.x,
-            'right': WorldAxis.x,
-            'front': WorldAxis.z,
-            'back': WorldAxis.z,
-            'middleX': WorldAxis.x,
-            'middleY': WorldAxis.y,
-            'middleZ': WorldAxis.z
-        }
+        // console.log(...this.#cubes.filter(c => c.userData.center).map(c => [c.userData, c.position]));
 
         if(this.#faces[face]){
 
-            this.#faces[face].forEach(cube => {
-                
+            this.#cubes.filter(this.#faces[face]).forEach(cube => {
+                        
                 cube.position.applyAxisAngle(axis[face], angle_rad);
+
                 cube.rotateOnWorldAxis(axis[face], angle_rad);
             });
         }
-
+        
     }
 }

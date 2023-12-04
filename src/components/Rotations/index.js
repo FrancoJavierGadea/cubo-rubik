@@ -1,18 +1,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { sceneHelpers } from '@utils/helpers.js';
-import { Cube1x1 } from "./cube1x1.js";
-import { Cube2x2 } from "./cube2x2.js";
-import { Cube3x3 } from "./cube3x3.js";
+import { testRotations } from "./rotations.js";
+import { drawWorldAxis } from '@utils/axis.js';
 import { getStats } from '@utils/stats.js';
-import { drawWorldAxis } from "@utils/axis.js";
+
 
 const width = window.innerWidth;
 const height = window.innerHeight;
 
 const renderer = new THREE.WebGLRenderer({
     
-    canvas: document.getElementById('main-scene'),
+    canvas: document.getElementById('rotation-canvas'),
 });
 
 renderer.setSize(width, height);
@@ -28,20 +26,21 @@ const controls = new OrbitControls(camera, renderer.domElement);
 //Helpers
 drawWorldAxis(scene);
 
+
 //
-scene.add(new Cube3x3({
-
-    position: {x: 0, y: 0, z: 0}
-}))
+const update = testRotations(scene);
 
 
-const stats = getStats();
 
 //Render
+const stats = getStats();
+
 function animate(){
 
     stats.begin();
 
+    update();
+    
     renderer.render(scene, camera);
 
     stats.end();

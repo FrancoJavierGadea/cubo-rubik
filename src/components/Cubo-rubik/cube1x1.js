@@ -71,7 +71,7 @@ export class Cube1x1 extends THREE.Group {
 
         super();
         
-        const {size = 2, position = {}} = config;
+        const {size = 2, position = {}, data = {}} = config;
 
         const scale = 0.99;
 
@@ -95,6 +95,11 @@ export class Cube1x1 extends THREE.Group {
         this.position.x = position.x || 0;
         this.position.y = position.y || 0;
         this.position.z = position.z || 0; 
+
+        this.userData = {
+            ...data,
+            colors: faces.map(face => face.material.color.getHexString())
+        };
     }
 
 }

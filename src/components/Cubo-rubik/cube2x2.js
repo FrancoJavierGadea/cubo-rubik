@@ -39,28 +39,32 @@ export class Cube2x2 extends THREE.Group {
 
         super();
         
-        const {size = 5, gap = 0.05, position = {}} = config;
+        const {size = 1, gap = 0.05, position = {}} = config;
 
         this.#cubes = getCubes1x1(size, gap);
         
-        //Faces
-        this.#faces.front = this.#cubes.filter((cube) => cube.position.z > 0);
-        this.#faces.back = this.#cubes.filter((cube) => cube.position.z < 0);
-
-        this.#faces.left = this.#cubes.filter((cube) => cube.position.x < 0);
-        this.#faces.right = this.#cubes.filter((cube) => cube.position.x > 0);
-
-        this.#faces.top = this.#cubes.filter((cube) => cube.position.y > 0);
-        this.#faces.bottom = this.#cubes.filter((cube) => cube.position.y < 0);
-
         this.add(...this.#cubes);
 
+        //Faces
+        this.#faces = {
+
+            front: (cube) => (cube.position.z > 0),
+            back: (cube) => (cube.position.z < 0),
+
+            left: (cube) => (cube.position.x < 0),
+            right: (cube) => (cube.position.x > 0),
+
+            top: (cube) => (cube.position.y > 0),
+            bottom: (cube) => (cube.position.y < 0),
+        };
+        
         this.position.x = 0 || position.x || 0;
         this.position.y = 0 || position.y || 0;
         this.position.z = 0 || position.z || 0;
         
-        // this.rotateFace('front', 60);
-        // this.rotateFace('back', 60);
+        this.rotateFace('front', 90);
+        this.rotateFace('top', 90);
+        this.rotateFace('left', 90);
     }
 
     rotateFace(face, angle){
@@ -78,9 +82,10 @@ export class Cube2x2 extends THREE.Group {
 
         if(this.#faces[face]){
 
-            this.#faces[face].forEach(cube => {
+            this.#cubes.filter(this.#faces[face]).forEach(cube => {
                 
                 cube.position.applyAxisAngle(axis[face], angle_rad);
+
                 cube.rotateOnWorldAxis(axis[face], angle_rad);
             });
         }
