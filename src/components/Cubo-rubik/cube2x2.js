@@ -2,6 +2,7 @@ import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
 import {ORIGIN, WORLD_AXIS} from "@utils/world.js";
 import { chainTweens } from "@utils/tween.js";
+import { chainThreeAnimations } from "@utils/threeAnimations.js";
 import { Cube1x1 } from "./cube1x1.js";
 
 
@@ -75,6 +76,14 @@ export class Cube2x2 extends THREE.Group {
         this.position.x = position.x || 0;
         this.position.y = position.y || 0;
         this.position.z = position.z || 0;
+
+        //Animation three
+        this.animationMixer = new THREE.AnimationMixer(this);
+
+        this.tick = (delta) => {
+    
+            this.animationMixer.update(delta);
+        }
     }
 
 
@@ -96,11 +105,38 @@ export class Cube2x2 extends THREE.Group {
         const angle_rad = THREE.MathUtils.degToRad(angle);
 
 
-        //Animacion 
-        //const action = this.createThreeAnimation(angle_rad);
+        //Animacion Three 
+        const three = this.createThreeAnimation(angle_rad, face);
 
         //Animacion Tween
-        const tween = this.createTweenAnimation(angle_rad, time);
+        const tween = this.createTweenAnimation(angle_rad, face, time);
+
+    
+
+        return {
+            rotate: () => {
+                this.#cubes.filter(this.#faces[face]).forEach(cube => {
+
+                    cube.rotateAround.rotate(angle_rad, this.#axis[face]);
+                });
+            },
+
+            tween,
+
+            three
+        }
+    }
+
+    createTweenAnimation(angle, face, time = 1){
+
+        const keyframes = {
+
+            from: { angle: 0 },
+
+            to: { angle: angle}
+        }
+
+        const tween = new TWEEN.Tween(keyframes.from).to(keyframes.to, time * 1000);
 
         tween.onStart((value) => {
 
@@ -127,33 +163,10 @@ export class Cube2x2 extends THREE.Group {
             });
         });
 
-        return {
-            rotate: () => {
-                this.#cubes.filter(this.#faces[face]).forEach(cube => {
-
-                    cube.rotateAround.rotate(angle_rad, this.#axis[face]);
-                });
-            },
-
-            tween
-        }
-    }
-
-    createTweenAnimation(angle, time = 1){
-
-        const keyframes = {
-
-            from: { angle: 0 },
-
-            to: { angle: angle}
-        }
-
-        const tween = new TWEEN.Tween(keyframes.from).to(keyframes.to, time * 1000);
-
         return tween;
     }
 
-    createThreeAnimation(angle_rad){
+    createThreeAnimation(angle_rad, face){
 
         const keyframes = {
             '0': 0,
@@ -163,22 +176,38 @@ export class Cube2x2 extends THREE.Group {
         const times = Object.keys(keyframes).map(key => +key);
         const values = Object.values(keyframes);
 
-        //const track = new THREE.NumberKeyframeTrack('._rotate_around_angle', times, values);
         const track = new THREE.NumberKeyframeTrack('.angle', times, values);
         const clip = new THREE.AnimationClip('rotate', -1, [track]);
 
-        const group = new THREE.AnimationObjectGroup(...targets.map(cube => {
+        return {
+            start:() => {
 
-            cube.rotateAround.axis = this.#axis[face];
+                const targets = this.#cubes.reduce((acc, cube) => {
 
-            return cube.rotateAround;
-        }));
+                    const flag = this.#faces[face](cube);
 
-        const action = this.animationMixer.clipAction(clip, group);
+                    if(flag){
+                        
+                        cube.rotateAround.axis = this.#axis[face];
+                        acc.push(cube.rotateAround);
+                    }
+        
+                    return acc;
 
-        action.setLoop(THREE.LoopOnce);
-        action.clampWhenFinished = true;
+                }, []);
 
-        return action;
+                const group = new THREE.AnimationObjectGroup(...targets);
+
+                const action = this.animationMixer.clipAction(clip, group);
+        
+                action.setLoop(THREE.LoopOnce);
+                action.clampWhenFinished = true;
+        
+                action.play();
+
+                return action;
+            }
+        }
+
     }
 }

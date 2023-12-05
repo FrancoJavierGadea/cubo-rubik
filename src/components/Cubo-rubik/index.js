@@ -7,6 +7,7 @@ import { Cube2x2 } from './cube2x2.js';
 import { Cube3x3 } from './cube3x3.js';
 import { chainTweens } from '@utils/tween.js';
 import { CUBE_MOVES, getInverseMoves, getMoves } from './moves.js';
+import { chainThreeAnimations } from '@utils/threeAnimations.js';
 
 class Loop {
 
@@ -30,7 +31,7 @@ class Loop {
 
             TWEEN.update();
 
-            //this.tick();
+            this.tick();
 
             this.renderer.render(this.scene, this.camera);
 
@@ -129,4 +130,14 @@ window.tweenA = chainTweens(moves.map(move => {
 window.tweenB = chainTweens(reverse.map(move => {
 
     return cube.rotateFace(move.face, move.angle, 0.5).tween;
+}));
+
+window.threeA = chainThreeAnimations(cube.animationMixer, moves.map(move => {
+
+    return cube.rotateFace(move.face, move.angle, 0.5).three;
+}));
+
+window.threeB = chainThreeAnimations(cube.animationMixer, reverse.map(move => {
+
+    return cube.rotateFace(move.face, move.angle, 0.5).three;
 }));
