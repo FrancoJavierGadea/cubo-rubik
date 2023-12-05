@@ -28,38 +28,52 @@ function getFaces(config = {}){
 
     if(position.y !== 0){
 
-        const color = position.y > 0 ? '#ffffff': '#ffd600';
+        const isTop = position.y > 0;
 
-        const topBottom = new Face(size * scale, color);
+        const color = isTop ? '#ffffff': '#ffd600';
 
-        topBottom.rotateX(Math.PI / 2);
-        topBottom.position.y = position.y > 0 ? n : -n;
+        const face = new Face(size * scale, color);
 
-        faces.push(topBottom);
+        face.rotateX(Math.PI / 2);
+        face.position.y = isTop ? n : -n;
+
+        face.userData.name = isTop ? 'Top' : 'Bottom';
+        face.userData.color = isTop ? 'White': 'Yellow';
+
+        faces.push(face);
     }
 
     if(position.z !== 0){
 
-        const color = position.z > 0 ? '#0044ae' : '#009c46';
+        const isFront = position.z > 0 
 
-        const backFront = new Face(size * scale, color);
+        const color = isFront ? '#0044ae' : '#009c46';
 
-        backFront.position.z = position.z > 0 ? n : -n;
+        const face = new Face(size * scale, color);
 
-        faces.push(backFront);
+        face.position.z = isFront > 0 ? n : -n;
+
+        face.userData.name = isFront ? 'Front' : 'Back';
+        face.userData.color = isFront ? 'Blue' : 'Green';
+
+        faces.push(face);
     }
 
     if(position.x !== 0){
 
-        const color = position.x > 0 ? '#b80a31' : '#ff5700';
+        const isRight = position.x > 0;
 
-        const leftRight = new Face(size * scale, color);
+        const color = isRight ? '#b80a31' : '#ff5700';
 
-        leftRight.rotateY(Math.PI / 2);
+        const face = new Face(size * scale, color);
 
-        leftRight.position.x = position.x > 0 ? n : -n;
+        face.rotateY(Math.PI / 2);
+        face.position.x = isRight ? n : -n;
 
-        faces.push(leftRight);
+        face.userData.name = isRight ? 'Right' : 'Left';
+        face.userData.color = isRight ? 'Red' : 'Orange';
+
+        faces.push(face);
     }
 
     return faces;
@@ -67,11 +81,11 @@ function getFaces(config = {}){
 
 class RotateAround {
 
+    #axis = WORLD_AXIS.Y
     #angle = 0
 
     set angle(value){
 
-        console.log('RotateAround', value);
         this.rotate(value - this.#angle);
 
         this.#angle = value;
@@ -80,6 +94,17 @@ class RotateAround {
     get angle(){
 
         return this.#angle;
+    }
+
+    set axis(value){
+
+        this.#angle = 0;
+        this.#axis = value;
+    }
+
+    get axis(){
+
+        return this.#axis;
     }
 
     constructor(config = {}){
@@ -103,16 +128,6 @@ class RotateAround {
 }
 
 export class Cube1x1 extends THREE.Group {
-
-    set _rotate_around_angle(value){
-
-        this.rotateAround.angle = value;
-    }
-
-    get _rotate_around_angle(){
-
-        return this.rotateAround.angle;
-    }
 
     constructor(config = {}){
 
@@ -145,7 +160,10 @@ export class Cube1x1 extends THREE.Group {
 
         this.userData = {
             ...data,
-            colors: faces.map(face => face.material.color.getHexString())
+            colorsHex: faces.map(face => face.material.color.getHexString()),
+            colors: faces.map(face => face.userData.color),
+            name: faces.map(face => face.userData.name).join('-'),
+            position
         };
 
         this.rotateAround = new RotateAround({

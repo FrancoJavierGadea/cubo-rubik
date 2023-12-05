@@ -1,8 +1,12 @@
 import * as THREE from 'three';
+import * as TWEEN from "@tweenjs/tween.js";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { drawWorldAxis } from '@utils/world.js';
 import { getStats } from '@utils/stats.js';
 import { Cube2x2 } from './cube2x2.js';
+import { Cube3x3 } from './cube3x3.js';
+import { chainTweens } from '@utils/tween.js';
+import { CUBE_MOVES, getInverseMoves, getMoves } from './moves.js';
 
 class Loop {
 
@@ -24,7 +28,9 @@ class Loop {
 
             this.stats.begin();
 
-            this.tick();
+            TWEEN.update();
+
+            //this.tick();
 
             this.renderer.render(this.scene, this.camera);
 
@@ -99,9 +105,28 @@ const height = window.innerHeight;
 const WORLD = new World(canvas, width, height);
 
 
-const cube = new Cube2x2();
+const cube = new Cube2x2({
+    gap: 0.1
+});
+
+window.cube = cube;
 
 WORLD.scene.add(cube);
 WORLD.loop.animatedItems.push(cube);
 
 WORLD.start();
+
+//Test
+const moves = getMoves("F R L F' B D F' L D' B' U R L U'");
+
+const reverse = getInverseMoves(moves);
+
+window.tweenA = chainTweens(moves.map(move => {
+
+    return cube.rotateFace(move.face, move.angle, 0.5).tween;
+}));
+
+window.tweenB = chainTweens(reverse.map(move => {
+
+    return cube.rotateFace(move.face, move.angle, 0.5).tween;
+}));
